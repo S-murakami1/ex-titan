@@ -1,0 +1,8 @@
+# uvのinstall
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# プロジェクトフォルダで実行 → .venv が作られ依存が入る
+uv sync
+
+# スクリプト起動
+uv run python extract_feratures.py /path/to/h5_directory

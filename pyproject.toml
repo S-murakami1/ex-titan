@@ -1,0 +1,18 @@
+[project]
+name = "ex-titan"
+version = "0.1.0"
+description = "TITAN slide embedding from ConCH features in H5"
+requires-python = ">=3.10"
+# 下限のみ指定（上限なし）。別マシンでは uv lock を再度実行するとその環境向けに解決し直せる。
+dependencies = [
+    "h5py>=3.8",
+    "numpy>=1.24",
+    "torch>=2.0",
+    "transformers>=4.36",
+    "huggingface-hub>=0.20",
+    "loguru>=0.7",
+    "tqdm>=4.65",
+]
+
+[tool.uv]
+package = false
