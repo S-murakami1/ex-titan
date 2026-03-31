@@ -20,6 +20,16 @@ CONCH_FEATURES_KEY = "conch15/features"
 COORDS_KEY = "coordinates"
 TITAN_FEATURES_KEY = "titan/features"
 PATCH_SIZE_LEVEL0 = 256
+# True: CUDA が2枚以上のとき nn.DataParallel でラップ（効かない場合が多い）
+USE_DATAPARALLEL = True
+
+
+def _encode_slide_from_patch_features(model, features, coords, patch_size_level0):
+    """DataParallel ラップ時は module 側のメソッドを呼ぶ（ラッパーに同名が無いため）。"""
+    inner = model.module if isinstance(model, torch.nn.DataParallel) else model
+    return inner.encode_slide_from_patch_features(
+        features, coords, patch_size_level0
+    )
 
 
 def extract_titan_slide_embedding(
@@ -54,8 +64,8 @@ def extract_titan_slide_embedding(
     )
 
     with autocast_ctx, torch.inference_mode():
-        slide_embedding = model.encode_slide_from_patch_features(
-            features, coords, PATCH_SIZE_LEVEL0
+        slide_embedding = _encode_slide_from_patch_features(
+            model, features, coords, PATCH_SIZE_LEVEL0
         )
 
     logger.info(f"Slide embedding shape: {slide_embedding.shape}")
@@ -86,7 +96,19 @@ def extract_titan_slide_embedding(
 
 def load_titan_model():
     model = AutoModel.from_pretrained(MODEL_ID, trust_remote_code=True)
-    return model.to(device)
+    model = model.to(device)
+    # DataParallel は forward のバッチ分割向け。TITAN のスライドエンコードは
+    # 全パッチが相互作用するため、これで VRAM が割れるとは限らない（効かないことが多い）。
+    if (
+        USE_DATAPARALLEL
+        and device.type == "cuda"
+        and torch.cuda.device_count() > 1
+    ):
+        logger.warning(
+            "USE_DATAPARALLEL: nn.DataParallel を有効化。"
+        )
+        model = torch.nn.DataParallel(model)
+    return model
 
 
 def parse_args(argv: list[str] | None = None):
@@ -141,3 +163,5 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+# TITAN_DATAPARALLEL=1 uv run python extract_feratures.py /path/to/h5_directory
