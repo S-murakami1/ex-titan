@@ -1,6 +1,6 @@
 # ex-titan
 
-ConCH のパッチ特徴が入った HDF5 から、[MahmoodLab/TITAN](https://huggingface.co/MahmoodLab/TITAN) でスライド埋め込みを計算し、同じ H5 の `titan/features` に書き戻します。
+CONCH のパッチ特徴が入った HDF5 から、[MahmoodLab/TITAN](https://huggingface.co/MahmoodLab/TITAN) でスライド埋め込みを計算し、同じ H5 の `titan/features` に書き戻します。
 
 - メンテナ: [S-murakami1](https://github.com/S-murakami1)
 
